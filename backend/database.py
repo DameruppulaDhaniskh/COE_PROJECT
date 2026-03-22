@@ -8,7 +8,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "..", "database", "predictions_v2.db")
+if os.environ.get("VERCEL") == "1":
+    DB_PATH = "/tmp/predictions_v2.db"
+else:
+    DB_PATH = os.path.join(BASE_DIR, "..", "database", "predictions_v2.db")
 
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 

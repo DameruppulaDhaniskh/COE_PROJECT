@@ -21,7 +21,7 @@ from schemas import CreditInput, PredictionResponse, HistoryItem
 Base.metadata.create_all(bind=engine)
 
 # ── Load model artefacts ───────────────────────────────────────────────────
-MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models")
+MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
 
 model_path = os.path.join(MODEL_DIR, "credit_model.pkl")
 columns_path = os.path.join(MODEL_DIR, "model_columns.pkl")
@@ -52,12 +52,13 @@ app.add_middleware(
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────
-@app.get("/", tags=["Health"])
+@app.get("/api/", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
 def health_check():
     return {"status": "ok", "model_loaded": True, "features": len(model_columns)}
 
 
-@app.post("/predict", response_model=PredictionResponse, tags=["Prediction"])
+@app.post("/api/predict", response_model=PredictionResponse, tags=["Prediction"])
 def predict(data: CreditInput, db: Session = Depends(get_db)):
     """Run the credit-default model and persist the result."""
 
@@ -95,7 +96,7 @@ def predict(data: CreditInput, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/history", response_model=list[HistoryItem], tags=["History"])
+@app.get("/api/history", response_model=list[HistoryItem], tags=["History"])
 def get_history(db: Session = Depends(get_db)):
     """Return all past predictions, newest first."""
     records = (

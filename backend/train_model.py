@@ -13,7 +13,7 @@ from sklearn.metrics import classification_report, accuracy_score
 # ── Paths ───────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "..", "..", "default of credit card clients.csv")
-MODEL_DIR = os.path.join(BASE_DIR, "..", "models")
+MODEL_DIR = os.path.join(BASE_DIR, "models")
 
 # ── Selected features ──────────────────────────────────────────────
 SELECTED_FEATURES = [
