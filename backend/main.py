@@ -4,6 +4,8 @@ Credit Card Default Risk Prediction — FastAPI Backend
 • Loads a pre-trained Random Forest model on startup
 • POST /predict  → run inference, store result, return risk level + probability
 • GET  /history  → return all past predictions for the dashboard
+"""
+
 import os
 import sys
 
