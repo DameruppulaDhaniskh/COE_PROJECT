@@ -17,22 +17,30 @@ from database import engine, get_db, Base
 from models import PredictionRecord
 from schemas import CreditInput, PredictionResponse, HistoryItem
 
-# ── Create tables (if they don't exist yet) ────────────────────────────────
-Base.metadata.create_all(bind=engine)
+startup_error = None
+model = None
+model_columns = None
 
-# ── Load model artefacts ───────────────────────────────────────────────────
-MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
+try:
+    # ── Create tables (if they don't exist yet) ────────────────────────────────
+    Base.metadata.create_all(bind=engine)
 
-model_path = os.path.join(MODEL_DIR, "credit_model.pkl")
-columns_path = os.path.join(MODEL_DIR, "model_columns.pkl")
+    # ── Load model artefacts ───────────────────────────────────────────────────
+    MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
 
-if not os.path.exists(model_path):
-    raise FileNotFoundError(f"Model file not found at {model_path}")
-if not os.path.exists(columns_path):
-    raise FileNotFoundError(f"Columns file not found at {columns_path}")
+    model_path = os.path.join(MODEL_DIR, "credit_model.pkl")
+    columns_path = os.path.join(MODEL_DIR, "model_columns.pkl")
 
-model = joblib.load(model_path)
-model_columns = joblib.load(columns_path)
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found at {model_path}")
+    if not os.path.exists(columns_path):
+        raise FileNotFoundError(f"Columns file not found at {columns_path}")
+
+    model = joblib.load(model_path)
+    model_columns = joblib.load(columns_path)
+except Exception as e:
+    import traceback
+    startup_error = traceback.format_exc()
 
 # ── FastAPI app ────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -55,7 +63,9 @@ app.add_middleware(
 @app.get("/api/", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
 def health_check():
-    return {"status": "ok", "model_loaded": True, "features": len(model_columns)}
+    if startup_error:
+        return {"status": "error", "message": startup_error}
+    return {"status": "ok", "model_loaded": model is not None, "features": len(model_columns)}
 
 
 @app.post("/api/predict", response_model=PredictionResponse, tags=["Prediction"])
