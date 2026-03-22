@@ -4,9 +4,12 @@ Credit Card Default Risk Prediction — FastAPI Backend
 • Loads a pre-trained Random Forest model on startup
 • POST /predict  → run inference, store result, return risk level + probability
 • GET  /history  → return all past predictions for the dashboard
-"""
-
 import os
+import sys
+
+# Ensure Vercel can resolve local modules like 'database' and 'schemas'
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import joblib
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,14 +74,12 @@ def health_check():
 def predict(data: CreditInput, db: Session = Depends(get_db)):
     """Run the credit-default model and persist the result."""
 
-    # Build a DataFrame in the exact column order the model expects
     input_dict = data.model_dump()
-    df = pd.DataFrame([input_dict])
-    df = df[model_columns]  # reorder to match training columns
+    features = [[input_dict[col] for col in model_columns]]
 
     # Prediction
-    prediction = int(model.predict(df)[0])
-    probability = float(model.predict_proba(df)[0][1])  # P(default)
+    prediction = int(model.predict(features)[0])
+    probability = float(model.predict_proba(features)[0][1])  # P(default)
     risk_level = "High Default Risk" if prediction == 1 else "Low Default Risk"
 
     # Persist to DB
